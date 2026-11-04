@@ -1,4 +1,4 @@
-# ## Library Management System
+# Library Management System
 
 ### Project Overview
 The **Library Management System** is a desktop-based application designed to streamline library administration, record-keeping, and book transaction workflows. Built specifically for librarian operations, the system automates book inventory tracking, borrow/return workflows, barcode validation, and record archiving to maintain strict data integrity.

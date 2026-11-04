@@ -1,0 +1,431 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
+ */
+package Library;
+
+/**
+ *
+ * @author Administrator
+ */
+import javax.swing.*;
+import javax.swing.event.DocumentEvent; 
+import javax.swing.event.DocumentListener; 
+import javax.swing.table.DefaultTableModel;
+import java.sql.*;
+import Library.Borrower;
+import java.awt.event.FocusAdapter; 
+import java.awt.event.FocusEvent;
+
+public class Borrowinfo extends javax.swing.JPanel {
+
+    private static final String SEARCH_DEFAULT_TEXT = "Search";
+    
+    private DefaultTableModel getTableModel() {
+        return (DefaultTableModel) borrowerinfotable.getModel();
+    }
+    
+    private void setupSearchFocusListener() {
+        searchborrower.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (searchborrower.getText().equals(SEARCH_DEFAULT_TEXT)) {
+                    searchborrower.setText("");
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (searchborrower.getText().isEmpty()) {
+                    searchborrower.setText(SEARCH_DEFAULT_TEXT);
+                }
+            }
+        });
+    }
+
+    private void setupAutoSearchListener() {
+        searchborrower.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                performAutoSearch();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                performAutoSearch();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                performAutoSearch();
+            }
+        });
+    }
+
+    private void performAutoSearch() {
+        String keyword = searchborrower.getText().trim();
+
+        // If the text is the placeholder or empty, load all.
+        if (keyword.equals(SEARCH_DEFAULT_TEXT)) {
+            loadBorrowers(null); 
+            return;
+        }
+
+        // Search with the current text, passing null if the keyword is empty
+        loadBorrowers(keyword.isEmpty() ? null : keyword);
+    }
+    
+    /**
+     * Fetches borrower data from the database and updates the table.
+     * @param keyword The search keyword, or null to load all active borrowers.
+     */
+    public void loadBorrowers(String keyword) {
+        String sql;
+        
+        // Use a generic search if keyword is provided and not empty
+        if (keyword != null && !keyword.isEmpty()) {
+            sql = "SELECT borrower_id, name, address, contact, status FROM borrowers " + 
+                  "WHERE status = 'Active' AND (name LIKE ? OR contact LIKE ? OR address LIKE ?) " + 
+                  "ORDER BY borrower_id DESC";
+        } else {
+            // Default: Load all active borrowers
+            sql = "SELECT borrower_id, name, address, contact, status FROM borrowers WHERE status = 'Active' ORDER BY borrower_id DESC";
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            // Set parameters if searching
+            if (keyword != null && !keyword.isEmpty()) {
+                String likeKeyword = "%" + keyword + "%";
+                ps.setString(1, likeKeyword);
+                ps.setString(2, likeKeyword);
+                ps.setString(3, likeKeyword);
+            }
+            
+            // Execute the query
+            try (ResultSet rs = ps.executeQuery()) {
+                DefaultTableModel model = getTableModel();
+                model.setRowCount(0); // Clear existing data
+
+                while(rs.next()) {
+                    Object[] row = {
+                        rs.getInt("borrower_id"),
+                        rs.getString("name"),
+                        rs.getString("address"),
+                        rs.getString("contact"),
+                        rs.getString("status")
+                    };
+                    model.addRow(row);
+                }
+            }
+        } catch(SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading borrower data: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+    
+    public Borrowinfo() {
+        initComponents();
+        // Set the initial default text
+        searchborrower.setText(SEARCH_DEFAULT_TEXT); 
+        
+        // Load all data on initialization (pass null keyword)
+        loadBorrowers(null); 
+        
+        // Setup listeners for automatic search and placeholder text
+        setupSearchFocusListener();
+        setupAutoSearchListener();
+    }
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        borrowerinfotable = new javax.swing.JTable();
+        jLabel1 = new javax.swing.JLabel();
+        searchborrower = new javax.swing.JTextField();
+        addborrower = new javax.swing.JButton();
+        updateborrower = new javax.swing.JButton();
+        removeborrower = new javax.swing.JButton();
+
+        jPanel1.setBackground(new java.awt.Color(204, 204, 204));
+        jPanel1.setPreferredSize(new java.awt.Dimension(600, 400));
+
+        borrowerinfotable.setBackground(new java.awt.Color(204, 204, 204));
+        borrowerinfotable.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        borrowerinfotable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null}
+            },
+            new String [] {
+                "Borrower ID", "Borrower ", "Address", "Contact #", "Status"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        borrowerinfotable.setGridColor(new java.awt.Color(0, 0, 0));
+        borrowerinfotable.setIntercellSpacing(new java.awt.Dimension(1, 1));
+        borrowerinfotable.setRowHeight(30);
+        borrowerinfotable.setShowGrid(true);
+        borrowerinfotable.setSurrendersFocusOnKeystroke(true);
+        jScrollPane1.setViewportView(borrowerinfotable);
+
+        jLabel1.setFont(new java.awt.Font("Arial", 1, 36)); // NOI18N
+        jLabel1.setText("B O R R O W E R S");
+
+        searchborrower.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        searchborrower.setText("Search");
+        searchborrower.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                searchborrowerActionPerformed(evt);
+            }
+        });
+
+        addborrower.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        addborrower.setText("ADD");
+        addborrower.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addborrowerActionPerformed(evt);
+            }
+        });
+
+        updateborrower.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        updateborrower.setText("UPDATE");
+        updateborrower.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                updateborrowerActionPerformed(evt);
+            }
+        });
+
+        removeborrower.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        removeborrower.setText("REMOVE");
+        removeborrower.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                removeborrowerActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGap(38, 38, 38)
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(searchborrower, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(59, 59, 59)
+                .addComponent(addborrower)
+                .addGap(131, 131, 131)
+                .addComponent(updateborrower)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 139, Short.MAX_VALUE)
+                .addComponent(removeborrower)
+                .addGap(45, 45, 45))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGap(36, 36, 36)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(searchborrower, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(updateborrower, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(removeborrower, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(addborrower))
+                .addContainerGap(19, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        );
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void updateborrowerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateborrowerActionPerformed
+    int selectedRow = borrowerinfotable.getSelectedRow();
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this, "Please select a borrower to update.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    // Get the ID from the selected row (Column 0)
+    DefaultTableModel model = getTableModel();
+    // Ensure the ID is cast to an integer correctly
+    int id = (int) model.getValueAt(selectedRow, 0);
+
+    // FIX: Use the unified Borrower class for the update
+    // Calls: public Borrower(Borrowinfo parent, int id)
+    Borrower updateForm = new Borrower(this, id); 
+    updateForm.setVisible(true);
+    updateForm.setLocationRelativeTo(null);
+    }//GEN-LAST:event_updateborrowerActionPerformed
+
+    private void removeborrowerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeborrowerActionPerformed
+    int selectedRow = borrowerinfotable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a borrower to remove/delete.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Get data from the selected row (Borrower ID is at column index 0)
+        DefaultTableModel model = (DefaultTableModel) borrowerinfotable.getModel();
+        int id = (int) model.getValueAt(selectedRow, 0);
+        String name = (String) model.getValueAt(selectedRow, 1); // Borrower Name
+        
+        // =================================================================
+        // 1. CHECK FOR OUTSTANDING LOANS (MANDATORY BEFORE DELETION) 🚫
+        // =================================================================
+        String checkLoanSql = "SELECT COUNT(*) FROM transactions WHERE borrower_id = ? AND return_date IS NULL";
+        int outstandingLoans = 0;
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement psCheck = conn.prepareStatement(checkLoanSql)) {
+            
+            psCheck.setInt(1, id);
+            try (ResultSet rs = psCheck.executeQuery()) {
+                if (rs.next()) {
+                    outstandingLoans = rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error checking loan status: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            return;
+        }
+
+        if (outstandingLoans > 0) {
+            JOptionPane.showMessageDialog(this, 
+                "Cannot permanently delete " + name + ".\n" +
+                "This borrower currently has " + outstandingLoans + " book(s) outstanding and must return them first.", 
+                "Deletion Failed", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // =================================================================
+        // 2. PROCEED WITH PERMANENT DELETION (HARD DELETE) ✅
+        // =================================================================
+        int confirmation = JOptionPane.showConfirmDialog(this, 
+                "⚠️ WARNING: Are you absolutely sure you want to PERMANENTLY DELETE borrower: " + name + "?\n" + 
+                "This action CANNOT be undone and will remove all their data.", 
+                "Confirm Permanent Deletion", JOptionPane.YES_NO_OPTION);
+        
+        if (confirmation == JOptionPane.YES_OPTION) {
+            
+            // SQL to permanently delete the borrower
+            String deleteSql = "DELETE FROM borrowers WHERE borrower_id=?";
+            
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+                
+                ps.setInt(1, id);
+                int rowsAffected = ps.executeUpdate();
+                
+                if (rowsAffected > 0) {
+                    JOptionPane.showMessageDialog(this, name + " has been permanently deleted from the database.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    
+                    // Logging the deletion
+                    // ActivityLog.log("BORROWER_DELETED", 
+                    //    String.format("Permanently deleted Borrower ID: %d, Name: %s.", id, name));
+                    
+                    // FIX: Pass null to refresh the table correctly
+                    loadBorrowers(null); // Refresh the table
+                } else {
+                    JOptionPane.showMessageDialog(this, "Deletion failed. Borrower ID not found or already deleted.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, "Error permanently deleting borrower: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_removeborrowerActionPerformed
+
+    private void addborrowerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addborrowerActionPerformed
+    Borrower addForm = new Borrower(this); 
+        addForm.setVisible(true);
+        addForm.setLocationRelativeTo(null);
+    }//GEN-LAST:event_addborrowerActionPerformed
+
+    private void searchborrowerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchborrowerActionPerformed
+   String keyword = searchborrower.getText().trim();
+        
+        if(keyword.isEmpty() || keyword.equals("Search")) { // Added check for default "Search" text
+            loadBorrowers(null);
+            return;
+        }
+
+        String sql = "SELECT borrower_id, name, address, contact, status FROM borrowers " + 
+                     "WHERE status = 'Active' AND (name LIKE ? OR contact LIKE ? OR address LIKE ?)";
+        
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            DefaultTableModel model = getTableModel();
+            model.setRowCount(0); 
+
+            String likeKeyword = "%" + keyword + "%";
+            ps.setString(1, likeKeyword);
+            ps.setString(2, likeKeyword);
+            ps.setString(3, likeKeyword);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                 while (rs.next()) {
+                    Object[] row = {
+                        rs.getInt("borrower_id"),
+                        rs.getString("name"),
+                        rs.getString("address"),
+                        rs.getString("contact"),
+                        rs.getString("status")
+                    };
+                    model.addRow(row);
+                }
+            }
+            searchborrower.setText(""); // Clear search field after search
+        } catch(SQLException e) {
+            JOptionPane.showMessageDialog(this, "Search error: " + e.getMessage(), "Search Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_searchborrowerActionPerformed
+
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton addborrower;
+    private javax.swing.JTable borrowerinfotable;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JButton removeborrower;
+    private javax.swing.JTextField searchborrower;
+    private javax.swing.JButton updateborrower;
+    // End of variables declaration//GEN-END:variables
+}
